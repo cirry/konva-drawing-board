@@ -3,10 +3,23 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <link rel="stylesheet" href="index.css">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite App</title>
   </head>
   <body>
+  <div id="toolbar" >
+    toolbar:
+    <button class="tool-btn" data-mode=""><i class="ri-cursor-line"></i></button>
+    <button class="tool-btn" data-mode="pen"><i class="ri-pencil-fill"></i></button>
+    <button class="tool-btn" data-mode="eraser"><i class="ri-eraser-fill"></i></button>
+    <button class="tool-btn" data-mode="rect"><i class="ri-square-line"></i></button>
+    <button class="tool-btn" data-mode="rect-fill"><i class="ri-square-fill"></i></button>
+    <button class="tool-btn" data-mode="polygon"><i class="ri-pentagon-line"></i></button>
+
+    <button id="clearBtn">clear</button>
+    <button id="getInfoBtn">getInfo</button>
+  </div>
     <div id="app"></div>
     <script type="module" src="/main.js"></script>
   </body>

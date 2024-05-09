@@ -12,6 +12,7 @@
     "vite": "^4.4.0"
   },
   "dependencies": {
-    "konva": "^9.3.6"
+    "konva": "^9.3.6",
+    "remixicon": "^4.2.0"
   }
 }
