@@ -1,5 +1,5 @@
 import Konva from "konva";
-import {stage, layer, tr, drawRect, drawPoint, drawPolygon, drawLine, drawVirtualPolygon} from "./src/common.js";
+import {stage, layer, tr, drawRect, drawPoint, drawPolygon, drawLine, drawVirtualPolygon, drawText, drawImage} from "./src/common.js";
 
 
 let mode = ''
@@ -8,23 +8,51 @@ let lastLine
 // 当前正在被绘画的元素
 let drawingGraph
 let drawingPoints = []
+let cursorPoint //  选择画折线的时候的鼠标样式
 
-const toolButtons = document.querySelectorAll('.tool-btn')
+let toolButtons = document.querySelectorAll('.tool-btn')
 toolButtons.forEach(btn => {
     btn.addEventListener('click', () => {
         tr.nodes([])
         drawingGraph = null
         mode = btn.dataset.mode || ''
         drawingPoints = []
+        removeShape('.auxiliary')
     })
 })
 
-const clearButton = document.getElementById("clearBtn")
+let saveButton = document.getElementById('saveBtn')
+saveButton.addEventListener('click', () => {
+    let json = stage.toJSON()
+    localStorage.setItem('result', json)
+})
+
+let importButton = document.getElementById('importBtn')
+importButton.addEventListener('click', () => {
+    let json = localStorage.getItem('result')
+    stage = Konva.Node.create(json, 'app');
+
+    // 还原 tr
+    tr = new Konva.Transformer({
+        borderStroke: '#000', // 虚线颜色
+        borderStrokeWidth: 2, //虚线大小
+        nodes: [],
+        rotateEnabled: false,
+        keepRatio: false,
+        boundBoxFunc: (oldBox, newBox) => {
+            const {x, y, width, height} = newBox
+            return newBox
+        }
+    })
+})
+
+
+let clearButton = document.getElementById("clearBtn")
 clearButton.addEventListener('click', () => {
     stage.find('.line').forEach(item => item.destroy())
     stage.find('.point').forEach(item => item.destroy())
 })
-const getInfoButton = document.getElementById("getInfoBtn")
+let getInfoButton = document.getElementById("getInfoBtn")
 getInfoButton.addEventListener('click', () => {
     console.log(stage.find('Transformer'))
 })
@@ -48,7 +76,7 @@ function removeShape(name, ...args) {
 stage.on('mousedown touchstart', function (e) {
     console.log('mousedown', e.target.name())
     // if (e.target.name()) { 这个地方目前无法理解，为什么这么写的话 tr会无法移动
-    if (['rect', 'polygon'].includes(e.target.name())) {
+    if (['rect', 'polygon', 'text', 'image'].includes(e.target.name())) {
         tr.nodes([])
         isPaint = false
         mode = 'tr'
@@ -98,9 +126,14 @@ stage.on('mousedown touchstart', function (e) {
             }
             console.log(drawingPoints)
         } else if (mode === 'border') {
+            function dragPointStart() {
+                console.log(drawingGraph, drawingPoints)
+            }
 
+            cursorPoint = drawPoint({x: pos.x, y: pos.y, name: 'auxiliary'})
+            layer.add(cursorPoint)
             if (!drawingGraph) { // 第一次点击
-                let point = drawPoint({x: pos.x, y: pos.y})
+                let point = drawPoint({x: pos.x, y: pos.y, name: 'line-point'})
                 layer.add(point)
                 drawingPoints.push(pos.x, pos.y)
                 drawingGraph = drawLine([drawingPoints])
@@ -119,11 +152,12 @@ stage.on('mousedown touchstart', function (e) {
                         }
                     }
                     if (isFind) {
-                        let point = drawPoint({x: similarPoint[0], y: similarPoint[1]})
+                        let point = drawPoint({x: similarPoint[0], y: similarPoint[1], name: 'line-point'})
+                        drawingPoints.push(similarPoint[0], similarPoint[1])
                         layer.add(point)
-                    }else{
+                    } else {
                         drawingPoints.push(pos.x, pos.y)
-                        let point = drawPoint({x: pos.x, y: pos.y})
+                        let point = drawPoint({x: pos.x, y: pos.y, name: 'line-point'})
                         layer.add(point)
                     }
                     newPoints = drawingPoints.concat(similarPoint);
@@ -132,13 +166,21 @@ stage.on('mousedown touchstart', function (e) {
                 }
                 drawingGraph.points(newPoints);
             }
+        } else if (mode === 'text') {
+            drawingGraph = drawText({x: pos.x, y: pos.y, text: "hello world"})
+            layer.add(drawingGraph)
+            isPaint = false
+        } else if (mode === 'image') {
+            drawingGraph = drawImage({x: pos.x, y: pos.y, width: 80, height: 80})
         }
     }
 });
 
 stage.on('mouseup touchend', function () {
+    console.log('mouseup')
     if (!['tr', 'polygon', 'virtual-polygon', 'polygon-fill', 'border'].includes(mode)) {
         isPaint = false;
+        mode = ''
     }
 });
 
@@ -151,7 +193,7 @@ stage.on('mousemove touchmove', function (e) {
     }
     // prevent scrolling on touch devices
     e.evt.preventDefault();
-    const pos = stage.getPointerPosition();
+    let pos = stage.getPointerPosition();
 
     if (mode === 'pen' || mode === 'eraser') {
         let newPoints = lastLine.points().concat([pos.x, pos.y]);
@@ -169,6 +211,7 @@ stage.on('mousemove touchmove', function (e) {
         let newPoints = drawingPoints.concat([pos.x, pos.y]);
         drawingGraph.points(newPoints);
     } else if (mode === 'border') {
+        cursorPoint.setAttrs({x: pos.x, y: pos.y})
         // let newPoints = drawingPoints.concat([pos.x, pos.y]);
         // drawingGraph.points(newPoints);
     }
