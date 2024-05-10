@@ -48,24 +48,63 @@ function drawRect({x, y, width, height, fill}) {
     return rect
 }
 
-function drawPoint({x,y}) {
+function drawPoint({x, y}) {
     var circle = new Konva.Circle({
         x,
         y,
         radius: 4,
         fill: 'red',
-        name:'point'
+        name: 'point'
     });
     return circle
 }
 
-function drawPolygon(points){
+function drawPolygon(points, fill = '') {
+    var polygon = new Konva.Line({
+        points,
+        fill,
+        stroke: 'black',
+        strokeWidth: 2,
+        draggable: true,
+        closed: true,
+        name: 'polygon'
+    });
+    // 设置当元素移动的时候鼠标样式
+    polygon.on('mouseenter', function () {
+        stage.container().style.cursor = 'move';
+    });
+    polygon.on('mouseleave', function () {
+        stage.container().style.cursor = 'default';
+    });
+    return polygon
+}
+
+function drawLine(points) {
+    let lastLine = new Konva.Line({
+        stroke: '#df4b26',
+        strokeWidth: 2,
+        // round cap for smoother lines
+        lineCap: 'round',
+        lineJoin: 'round',
+        // add point twice, so we have some drawings even on a simple click
+        points,
+        name: 'line'
+    });
+    return lastLine
+}
+
+
+
+function drawVirtualPolygon(points) {
     var polygon = new Konva.Line({
         points,
         fill: '#00D2FF',
         stroke: 'black',
         strokeWidth: 5,
+        opacity: 0.2,
+        draggable: true,
         closed: true,
+        name: 'virtual-polygon'
     });
     return polygon
 }
@@ -74,6 +113,8 @@ export {
     drawRect,
     drawPoint,
     drawPolygon,
+    drawVirtualPolygon,
+    drawLine,
     stage,
     layer,
     tr
